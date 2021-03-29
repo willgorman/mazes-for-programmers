@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -10,8 +9,13 @@ import (
 
 func main() {
 	grid := maze.NewGrid(10, 10)
-	maze.Sidewinder(grid)
-	fmt.Print(grid)
+	maze.BinaryTree(grid)
+	// fmt.Print(grid)
+	png := grid.ToPNG()
+	err := png.SavePNG("out.png")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func init() {

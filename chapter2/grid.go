@@ -1,6 +1,11 @@
 package maze
 
-import "math/rand"
+import (
+	"image/color"
+	"math/rand"
+
+	"github.com/fogleman/gg"
+)
 
 type field [][]*Cell
 
@@ -120,4 +125,39 @@ func (g *Grid) String() string {
 		output = output + bottom + "\n"
 	})
 	return output
+}
+
+func (g *Grid) ToPNG() *gg.Context {
+	cell_size := 100
+	dc := gg.NewContext(cell_size*g.rows, cell_size*g.columns)
+	dc.SetColor(color.White)
+	dc.Clear()
+	dc.SetColor(color.Black)
+	g.eachCell(func(c *Cell) {
+		x1 := c.column * cell_size
+		y1 := c.row * cell_size
+		x2 := (c.column + 1) * cell_size
+		y2 := (c.row + 1) * cell_size
+
+		if c.north == nil {
+			dc.DrawLine(float64(x1), float64(y1), float64(x2), float64(y1))
+			dc.Stroke()
+		}
+		if c.west == nil {
+			dc.DrawLine(float64(x1), float64(y1), float64(x1), float64(y2))
+			dc.Stroke()
+		}
+
+		if !c.Linked(c.east) {
+			dc.DrawLine(float64(x2), float64(y1), float64(x2), float64(y2))
+			dc.Stroke()
+		}
+		if !c.Linked(c.south) {
+			dc.DrawLine(float64(x1), float64(y2), float64(x2), float64(y2))
+			dc.Stroke()
+		}
+
+	})
+	dc.Fill()
+	return dc
 }
