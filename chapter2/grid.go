@@ -3,6 +3,7 @@ package maze
 import (
 	"image/color"
 	"math/rand"
+	"strconv"
 
 	"github.com/fogleman/gg"
 )
@@ -18,13 +19,23 @@ type cellVisitor func(*Cell)
 type Grid struct {
 	field
 	rows, columns int
+	cellPrinter   CellContents
 }
 
 func NewGrid(rows, columns int) *Grid {
 	g := Grid{rows: rows, columns: columns}
 	g.field = g.prepare()
 	g.configure()
+	g.cellPrinter = g.defaultContents
 	return &g
+}
+
+func (g *Grid) Rows() int {
+	return g.rows
+}
+
+func (g *Grid) Columns() int {
+	return g.columns
 }
 
 // will need to override later
@@ -60,7 +71,7 @@ func (g *Grid) prepare() field {
 }
 
 // will need to override
-func (g *Grid) cellAt(row, col int) *Cell {
+func (g *Grid) CellAt(row, col int) *Cell {
 	if row < 0 || row > g.rows-1 {
 		return nil
 	}
@@ -71,7 +82,7 @@ func (g *Grid) cellAt(row, col int) *Cell {
 	return g.field[row][col]
 }
 
-func (g Grid) randomCell() *Cell {
+func (g Grid) RandomCell() *Cell {
 	row := rand.Intn(g.rows)
 	col := rand.Intn(len(g.field[row]))
 
@@ -96,6 +107,12 @@ func (g *Grid) eachCell(visit cellVisitor) {
 	})
 }
 
+type CellContents func(*Cell) string
+
+func (g *Grid) defaultContents(cell *Cell) string {
+	return " "
+}
+
 func (g *Grid) String() string {
 	output := "+"
 	for i := 0; i < g.columns; i++ {
@@ -110,10 +127,11 @@ func (g *Grid) String() string {
 			if c != nil {
 				cell = c
 			}
+			body := " " + g.cellPrinter(cell) + " "
 			if cell.Linked(cell.east) {
-				top += "    "
+				top += body + " "
 			} else {
-				top += "   |"
+				top += body + "|"
 			}
 			if cell.Linked(cell.south) {
 				bottom += "   +"
@@ -160,4 +178,44 @@ func (g *Grid) ToPNG() *gg.Context {
 	})
 	dc.Fill()
 	return dc
+}
+
+// TODO: return new grid rather than modifying
+func NewDistanceGrid(g *Grid, startRow, startCol int) *DistanceGrid {
+	distances := g.CellAt(startRow, startCol).Distances()
+
+	dgrid := &DistanceGrid{
+		Grid:      g,
+		Distances: &distances,
+	}
+	g.cellPrinter = dgrid.cellPrinter // TODO: follow through
+	// fmt.Println(distances)
+	// TODO: interface or something less scope-juggly
+	// g.cellPrinter = func(c *Cell) string {
+	// 	if dgrid.Distances.GetDistance(c) != Unvisited {
+	// 		return strconv.FormatInt(int64(dgrid.Distances.GetDistance(c)), 36)
+	// 	} else {
+	// 		return g.defaultContents(c)
+	// 	}
+	// }
+
+	return dgrid
+}
+
+type DistanceGrid struct {
+	*Grid
+	Distances *Distances
+}
+
+func (d *DistanceGrid) String() string {
+	// TODO: still feels like there's an interface here
+	d.cellPrinter = func(c *Cell) string {
+		if d.Distances.GetDistance(c) != Unvisited {
+			return strconv.FormatInt(int64(d.Distances.GetDistance(c)), 36)
+		} else {
+			return d.Grid.defaultContents(c)
+		}
+	}
+
+	return d.Grid.String()
 }

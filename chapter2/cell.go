@@ -59,3 +59,22 @@ func (c *Cell) Neighbors() []*Cell {
 	}
 	return ns
 }
+
+func (c *Cell) Distances() Distances {
+	ds := NewDistances(c)
+	frontier := []*Cell{c}
+	for len(frontier) > 0 {
+		newFrontier := []*Cell{}
+		for _, cell := range frontier {
+			for _, linked := range cell.Links() {
+				if ds.GetDistance(linked) != Unvisited {
+					continue
+				}
+				ds.SetDistance(linked, ds.GetDistance(cell)+1)
+				newFrontier = append(newFrontier, linked)
+			}
+		}
+		frontier = newFrontier
+	}
+	return ds
+}
