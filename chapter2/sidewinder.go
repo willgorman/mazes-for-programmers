@@ -2,6 +2,8 @@ package maze
 
 import "math/rand"
 
+// FIXME: doesn't look quite the same as the colored example, might be a bug here
+
 func Sidewinder(g *Grid) *Grid {
 	g.eachRow(func(r row) {
 		run := []*Cell{}

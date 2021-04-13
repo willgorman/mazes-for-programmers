@@ -20,6 +20,17 @@ type Grid struct {
 	field
 	rows, columns int
 	cellPrinter   CellContents
+	colorizer     CellColorizer
+}
+
+type CellColorizer interface {
+	Background(*Cell) color.Color
+}
+
+type defaultColorizer struct{}
+
+func (c defaultColorizer) Background(*Cell) color.Color {
+	return color.White
 }
 
 func NewGrid(rows, columns int) *Grid {
@@ -27,6 +38,7 @@ func NewGrid(rows, columns int) *Grid {
 	g.field = g.prepare()
 	g.configure()
 	g.cellPrinter = g.defaultContents
+	g.colorizer = defaultColorizer{}
 	return &g
 }
 
@@ -150,32 +162,39 @@ func (g *Grid) ToPNG() *gg.Context {
 	dc := gg.NewContext(cell_size*g.rows, cell_size*g.columns)
 	dc.SetColor(color.White)
 	dc.Clear()
-	dc.SetColor(color.Black)
-	g.eachCell(func(c *Cell) {
-		x1 := c.column * cell_size
-		y1 := c.row * cell_size
-		x2 := (c.column + 1) * cell_size
-		y2 := (c.row + 1) * cell_size
+	for _, mode := range []string{"background", "wall"} {
+		dc.SetColor(color.Black)
+		g.eachCell(func(c *Cell) {
+			x1 := c.column * cell_size
+			y1 := c.row * cell_size
+			x2 := (c.column + 1) * cell_size
+			y2 := (c.row + 1) * cell_size
+			if mode == "background" {
+				cellColor := g.colorizer.Background(c)
+				dc.SetColor(cellColor)
+				dc.DrawRectangle(float64(x1), float64(y1), float64(x2), float64(y2))
+				dc.Fill()
+			} else {
+				if c.north == nil {
+					dc.DrawLine(float64(x1), float64(y1), float64(x2), float64(y1))
+					dc.Stroke()
+				}
+				if c.west == nil {
+					dc.DrawLine(float64(x1), float64(y1), float64(x1), float64(y2))
+					dc.Stroke()
+				}
 
-		if c.north == nil {
-			dc.DrawLine(float64(x1), float64(y1), float64(x2), float64(y1))
-			dc.Stroke()
-		}
-		if c.west == nil {
-			dc.DrawLine(float64(x1), float64(y1), float64(x1), float64(y2))
-			dc.Stroke()
-		}
-
-		if !c.Linked(c.east) {
-			dc.DrawLine(float64(x2), float64(y1), float64(x2), float64(y2))
-			dc.Stroke()
-		}
-		if !c.Linked(c.south) {
-			dc.DrawLine(float64(x1), float64(y2), float64(x2), float64(y2))
-			dc.Stroke()
-		}
-
-	})
+				if !c.Linked(c.east) {
+					dc.DrawLine(float64(x2), float64(y1), float64(x2), float64(y2))
+					dc.Stroke()
+				}
+				if !c.Linked(c.south) {
+					dc.DrawLine(float64(x1), float64(y2), float64(x2), float64(y2))
+					dc.Stroke()
+				}
+			}
+		})
+	}
 	dc.Fill()
 	return dc
 }
@@ -218,4 +237,17 @@ func (d *DistanceGrid) String() string {
 	}
 
 	return d.Grid.String()
+}
+
+func (d *DistanceGrid) ToPNG() *gg.Context {
+	d.colorizer = d
+	return d.Grid.ToPNG()
+}
+
+func (d *DistanceGrid) Background(c *Cell) color.Color {
+	if d.Distances.GetDistance(c) != Unvisited {
+		return color.RGBA{255, 100, 100, 255}
+	} else {
+		return defaultColorizer{}.Background(c)
+	}
 }
