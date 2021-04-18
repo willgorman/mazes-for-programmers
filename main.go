@@ -16,6 +16,30 @@ var (
 func main() {
 	flag.Parse()
 	switch *cmd {
+	case "hunt-and-kill":
+		grid := maze.NewGrid(25, 25)
+		maze.HuntAndKill(grid)
+		png := grid.ToPNG()
+		err := png.SavePNG("out.png")
+		if err != nil {
+			panic(err)
+		}
+	case "wilsons":
+		grid := maze.NewGrid(25, 25)
+		maze.Wilsons(grid)
+		png := grid.ToPNG()
+		err := png.SavePNG("out.png")
+		if err != nil {
+			panic(err)
+		}
+	case "aldousBroder":
+		grid := maze.NewGrid(25, 25)
+		maze.AldousBroder(grid)
+		png := grid.ToPNG()
+		err := png.SavePNG("out.png")
+		if err != nil {
+			panic(err)
+		}
 	case "longestPath":
 		maze.LongestPath()
 	case "coloredMaze":
@@ -55,7 +79,7 @@ func distance() {
 
 func coloredMaze() {
 	grid := maze.NewGrid(25, 25)
-	maze.Sidewinder(grid)
+	maze.AldousBroder(grid)
 
 	start := grid.CellAt(0, 0)
 	d := start.Distances()

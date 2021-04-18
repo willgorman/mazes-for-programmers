@@ -1,6 +1,7 @@
 package maze
 
 import (
+	"context"
 	"image/color"
 	"math/rand"
 	"strconv"
@@ -12,9 +13,13 @@ type field [][]*Cell
 
 type row []*Cell
 
-type rowVistor func(row)
+type rowVisitor func(row)
 
 type cellVisitor func(*Cell)
+
+type rowVisitorUntil func(context.Context, row)
+
+type cellVisitorUntil func(context.Context, *Cell)
 
 type Grid struct {
 	field
@@ -105,7 +110,7 @@ func (g Grid) size() int {
 	return g.rows * g.columns
 }
 
-func (g *Grid) eachRow(visit rowVistor) {
+func (g *Grid) eachRow(visit rowVisitor) {
 	for _, row := range g.field {
 		visit(row)
 	}
@@ -115,6 +120,30 @@ func (g *Grid) eachCell(visit cellVisitor) {
 	g.eachRow(func(r row) {
 		for _, cell := range r {
 			visit(cell)
+		}
+	})
+}
+
+func (g *Grid) eachRowUntil(ctx context.Context, visit rowVisitor) {
+	for _, row := range g.field {
+		visit(row)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+	}
+}
+
+func (g *Grid) eachCellUntil(ctx context.Context, visit cellVisitor) {
+	g.eachRowUntil(ctx, func(r row) {
+		for _, cell := range r {
+			visit(cell)
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
 		}
 	})
 }

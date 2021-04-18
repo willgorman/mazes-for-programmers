@@ -78,3 +78,13 @@ func (c *Cell) Distances() Distances {
 	}
 	return ds
 }
+
+func (c *Cell) CollectNeighbors(predicate func(n *Cell) bool) []*Cell {
+	result := []*Cell{}
+	for _, n := range c.Neighbors() {
+		if predicate(n) {
+			result = append(result, n)
+		}
+	}
+	return result
+}

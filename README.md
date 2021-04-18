@@ -1,7 +1,6 @@
 ## TODO
 
-* Check for a bug in sidewinder
-
+* Benchmark Aldous-Broder vs Wilson's
 
 ## Feature Ideas
 
