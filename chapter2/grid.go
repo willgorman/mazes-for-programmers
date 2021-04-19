@@ -228,6 +228,16 @@ func (g *Grid) ToPNG() *gg.Context {
 	return dc
 }
 
+func (g *Grid) Deadends() []*Cell {
+	result := []*Cell{}
+	g.eachCell(func(c *Cell) {
+		if len(c.Links()) == 1 {
+			result = append(result, c)
+		}
+	})
+	return result
+}
+
 // TODO: return new grid rather than modifying
 func NewDistanceGrid(g *Grid, startRow, startCol int) *DistanceGrid {
 	distances := g.CellAt(startRow, startCol).Distances()

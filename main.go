@@ -24,6 +24,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Printf("%d dead-ends", len(grid.Deadends()))
 	case "wilsons":
 		grid := maze.NewGrid(25, 25)
 		maze.Wilsons(grid)
