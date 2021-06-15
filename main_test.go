@@ -29,3 +29,11 @@ func Benchmark_HuntAndKill(b *testing.B) {
 	}
 
 }
+
+func Benchmark_Backtracker(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		grid := maze.NewGrid(25, 25)
+		maze.RecursiveBacktracker(grid)
+	}
+
+}

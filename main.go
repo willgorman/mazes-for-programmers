@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	maze "github.com/willgorman/mazes/chapter2"
 )
 
@@ -16,6 +18,25 @@ var (
 func main() {
 	flag.Parse()
 	switch *cmd {
+	case "interactive":
+		grid := maze.NewGrid(25, 25)
+		maze.RecursiveBacktracker(grid)
+		model := maze.TeaGrid{
+			Grid: grid,
+		}
+		p := tea.NewProgram(&model)
+		if err := p.Start(); err != nil {
+			fmt.Printf("Alas, there's been an error: %v", err)
+			os.Exit(1)
+		}
+	case "backtracker":
+		grid := maze.NewGrid(25, 25)
+		maze.RecursiveBacktracker(grid)
+		png := grid.ToPNG()
+		err := png.SavePNG("out.png")
+		if err != nil {
+			panic(err)
+		}
 	case "hunt-and-kill":
 		grid := maze.NewGrid(25, 25)
 		maze.HuntAndKill(grid)
