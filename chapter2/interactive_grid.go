@@ -20,6 +20,26 @@ func (g *TeaGrid) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return g, tea.Quit
+		case "w", "up":
+			if g.active.Linked(g.active.north) {
+				g.active = g.active.north
+			}
+			return g, nil
+		case "a", "left":
+			if g.active.Linked(g.active.west) {
+				g.active = g.active.west
+			}
+			return g, nil
+		case "s", "down":
+			if g.active.Linked(g.active.south) {
+				g.active = g.active.south
+			}
+			return g, nil
+		case "d", "right":
+			if g.active.Linked(g.active.east) {
+				g.active = g.active.east
+			}
+			return g, nil
 		default:
 			g.active = g.RandomCell()
 		}
